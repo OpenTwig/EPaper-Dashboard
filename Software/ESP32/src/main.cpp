@@ -31,7 +31,7 @@
 
 // ── Upload indicator — increment FW_COLOR (0-7) each flash to confirm new code ──
 //   0=Blue  1=Green  2=Red  3=Cyan  4=Magenta  5=Yellow  6=White  7=Orange
-#define FW_COLOR 3
+#define FW_COLOR 0
 
 // ── Pinout (bench-tested — do NOT change) ─────────────────────────────────────
 #define EPD_DC    10
@@ -53,7 +53,7 @@ static void neopixel_init() {
     pinMode(NEOPIXEL_POWER, OUTPUT);
     digitalWrite(NEOPIXEL_POWER, HIGH);
     pixel.begin();
-    pixel.setBrightness(10);
+    pixel.setBrightness(5);
 
     static const uint32_t COLORS[] = {
         0x0000FF,   // 0 Blue
