@@ -9,6 +9,7 @@ import logging
 import os
 import queue
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -198,6 +199,19 @@ def main():
     tray = ti.TrayIcon(config_path=CONFIG_PATH)
     tray.start()
 
+    # ── Shutdown signals ──────────────────────────────────────────────────────
+    # Logout/shutdown sends SIGTERM (SIGHUP if the session drops). Treat these
+    # and Ctrl-C like tray Quit so the panel gets wiped before we exit.
+    # The handler only sets a flag — the main loop does the actual clear.
+    stop_signal: list[int] = []
+
+    def _on_signal(signum, _frame):
+        stop_signal.append(signum)
+
+    for _sig in ("SIGTERM", "SIGHUP", "SIGINT"):
+        if hasattr(signal, _sig):
+            signal.signal(getattr(signal, _sig), _on_signal)
+
     # ── State ─────────────────────────────────────────────────────────────────
     page_idx    = 0
     cache:  dict[str, bytes | None] = {n: None for n in names}
@@ -247,6 +261,10 @@ def main():
             cmd = tray.cmd_queue.get_nowait()
         except queue.Empty:
             cmd = None
+
+        if stop_signal:
+            log.info("Received %s — shutting down.", signal.Signals(stop_signal[0]).name)
+            cmd = ti.CMD_QUIT
 
         if   cmd == ti.CMD_CLEAR:
             if sender:
